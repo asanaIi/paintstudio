@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 Paint Studio</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f0c1b, #241438, #12091f);
+            color: #f3e8ff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Декоративные фоновые сферы для крутого градиентного свечения */
+        .bg-glow {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(236, 72, 153, 0.3));
+            filter: blur(90px);
+            border-radius: 50%;
+            z-index: -1;
+            animation: float 10s ease-in-out infinite alternate;
+        }
+
+        .bg-glow.second {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(59, 130, 246, 0.3));
+            right: 10%;
+            bottom: 10%;
+            animation-duration: 14s;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(-40px) scale(1.1); }
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 95%;
+            max-width: 900px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            background: linear-gradient(90deg, #d8b4fe, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+        }
+
+        /* Glassmorphism панель инструментов */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 15px 25px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            width: 100%;
+        }
+
+        .tool-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: #d8b4fe;
+            font-weight: 500;
+        }
+
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            background: none;
+        }
+
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        input[type="color"]::-webkit-color-swatch {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+        }
+
+        input[type="range"] {
+            accent-color: #c084fc;
+            cursor: pointer;
+        }
+
+        .btn {
+            background: rgba(168, 85, 247, 0.2);
+            border: 1px solid rgba(216, 180, 254, 0.3);
+            color: #f3e8ff;
+            padding: 8px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .btn:hover {
+            background: rgba(168, 85, 247, 0.4);
+            border-color: rgba(216, 180, 254, 0.6);
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn.active {
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+            border-color: transparent;
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.6);
+        }
+
+        /* Холст в стеклянном контейнере */
+        .canvas-container {
+            background: rgba(20, 15, 30, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 10px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(168, 85, 247, 0.05);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            background: #181124;
+            border-radius: 16px;
+            cursor: crosshair;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-glow"></div>
+    <div class="bg-glow second"></div>
+
+    <div class="app-container">
+        <h1>🎨 Paint Studio!</h1>
+        
+        <div class="toolbar">
+            <div class="tool-group">
+                <label for="colorPicker">Цвет:</label>
+                <input type="color" id="colorPicker" value="#d8b4fe">
+            </div>
+
+            <div class="tool-group">
+                <label for="brushSize">Размер: <span id="sizeVal">5</span>px</label>
+                <input type="range" id="brushSize" min="1" max="50" value="5">
+            </div>
+
+            <div class="tool-group">
+                <button class="btn active" id="brushBtn">Кисть</button>
+                <button class="btn" id="eraserBtn">Ластик</button>
+            </div>
+
+            <div class="tool-group">
+                <button class="btn" id="clearBtn">Очистить</button>
+                <button class="btn" id="saveBtn">Сохранить</button>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="paintCanvas" width="800" height="450"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('paintCanvas');
+        const ctx = canvas.getContext('2d');
+        const colorPicker = document.getElementById('colorPicker');
+        const brushSizeInput = document.getElementById('brushSize');
+        const sizeVal = document.getElementById('sizeVal');
+        const brushBtn = document.getElementById('brushBtn');
+        const eraserBtn = document.getElementById('eraserBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const saveBtn = document.getElementById('saveBtn');
+
+        let isDrawing = false;
+        let isEraser = false;
+        let currentColor = colorPicker.value;
+        let currentSize = brushSizeInput.value;
+
+        // Инициализация фона холста
+        ctx.fillStyle = '#181124';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Обработчики интерфейса
+        colorPicker.addEventListener('input', (e) => {
+            currentColor = e.target.value;
+            if (isEraser) activateBrush();
+        });
+
+        brushSizeInput.addEventListener('input', (e) => {
+            currentSize = e.target.value;
+            sizeVal.textContent = currentSize;
+        });
+
+        brushBtn.addEventListener('click', () => {
+            activateBrush();
+        });
+
+        eraserBtn.addEventListener('click', () => {
+            isEraser = true;
+            eraserBtn.classList.add('active');
+            brushBtn.classList.remove('active');
+        });
+
+        function activateBrush() {
+            isEraser = false;
+            brushBtn.classList.add('active');
+            eraserBtn.classList.remove('active');
+        }
+
+        // Рисование мышей и касаниями
+        function startPosition(e) {
+            isDrawing = true;
+            draw(e);
+        }
+
+        function endPosition() {
+            isDrawing = false;
+            ctx.beginPath();
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX || e.touches[0].clientX) - rect.left;
+            const y = (e.clientY || e.touches[0].clientY) - rect.top;
+
+            ctx.lineWidth = currentSize;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            if (isEraser) {
+                ctx.strokeStyle = '#181124'; // цвет фона холста
+            } else {
+                ctx.strokeStyle = currentColor;
+            }
+
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+
+        canvas.addEventListener('mousedown', startPosition);
+        canvas.addEventListener('mouseup', endPosition);
+        canvas.addEventListener('mousemove', draw);
+
+        // Поддержка мобильных устройств
+        canvas.addEventListener('touchstart', (e) => { startPosition(e); e.preventDefault(); });
+        canvas.addEventListener('touchend', (e) => { endPosition(); e.preventDefault(); });
+        canvas.addEventListener('touchmove', (e) => { draw(e); e.preventDefault(); });
+
+        // Очистка
+        clearBtn.addEventListener('click', () => {
+            ctx.fillStyle = '#181124';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        });
+
+        // Сохранение картинки
+        saveBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'my-glass-art.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+    </script>
+</body>
+</html>
